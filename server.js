@@ -36,12 +36,13 @@ app.get("/clean-invoice", async (req, res) => {
 
     // Обновляем поле WhatsApp в счёте
     await axios.post(`${WEBHOOK}crm.item.update`, {
-      entityTypeId: 31,
+      entityTypeId: 31, // это обязательно!
       id: invoiceId,
       fields: {
-        UF_CRM_SMART_INVOICE_1729361040: whatsappLink
+        'UF_CRM_SMART_INVOICE_1729361040': whatsappLink // кавычки ОБЯЗАТЕЛЬНЫ
       }
     });
+
 
     res.send(`✅ WhatsApp обновлён: <a href="${whatsappLink}" target="_blank">${whatsappLink}</a>`);
   } catch (err) {
