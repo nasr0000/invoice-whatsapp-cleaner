@@ -50,10 +50,12 @@ app.get("/clean-invoice", async (req, res) => {
   }
 });
 
+// Проверка сервера
 app.get("/ping", (req, res) => {
   res.send("pong");
 });
 
+// Запуск сервера
 app.listen(PORT, () => {
   console.log(`🚀 Сервер запущен на порту ${PORT}`);
 });
