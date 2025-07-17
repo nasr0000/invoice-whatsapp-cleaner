@@ -11,69 +11,60 @@ app.get("/clean-wa-field", async (req, res) => {
   if (!invoiceId) return res.status(400).send("❌ Не передан invoice_id");
 
   try {
-    // Получаем смарт-счёт
     const invoiceRes = await axios.post(`${WEBHOOK}crm.item.get`, {
       entityTypeId: 31,
       id: invoiceId
     });
-
     const invoice = invoiceRes.data?.result?.item;
     if (!invoice) return res.status(404).send("❌ Смарт-счёт не найден");
 
-    // Логируем все поля
-    console.log("📦 Все ключи в invoice:", Object.keys(invoice));
+    console.log("📦 Ключи:", Object.keys(invoice));
 
-    // Ищем поле WhatsApp без учёта регистра
-    const key = Object.keys(invoice).find(k =>
-      k.toLowerCase() === WHATSAPP_FIELD.toLowerCase()
+    // Ищем ключ без учёта регистра и подчёркиваний
+    const normalize = str => str.toLowerCase().replace(/_/g, "");
+    const targetKey = Object.keys(invoice).find(k =>
+      normalize(k) === normalize(WHATSAPP_FIELD)
     );
 
-    console.log("🔍 Найденный ключ:", key);
-
-    const currentValue = key ? invoice[key] : null;
-    console.log("📥 Значение поля:", currentValue);
+    console.log("🔍 Найденный ключ:", targetKey);
+    const currentValue = targetKey ? invoice[targetKey] : null;
+    console.log("📥 Текущее значение:", currentValue);
 
     if (!currentValue) return res.send("❗ Поле WhatsApp пустое");
 
-    // Извлекаем номер из ссылки
+    // Извлекаем номер
     const phoneMatch = currentValue.match(/(\d[\d\s+().-]+)/);
     if (!phoneMatch) return res.send("❗ В поле WhatsApp не найден номер");
 
     const cleanedPhone = phoneMatch[0].replace(/\D/g, "");
     const newLink = `https://wa.me/${cleanedPhone}`;
-    console.log("🔗 Очищенная ссылка:", newLink);
+    console.log("🔗 Новая ссылка:", newLink);
 
-    // 1. Очистка поля (на всякий случай)
+    // Очистка
     await axios.post(`${WEBHOOK}crm.item.update`, {
       entityTypeId: 31,
       id: invoiceId,
-      fields: {
-        [WHATSAPP_FIELD]: ""
-      }
+      fields: { [targetKey]: "" }
     });
 
-    // 2. Установка нового значения
+    // Установка нового значения
     await axios.post(`${WEBHOOK}crm.item.update`, {
       entityTypeId: 31,
       id: invoiceId,
-      fields: {
-        [WHATSAPP_FIELD]: newLink
-      }
+      fields: { [targetKey]: newLink }
     });
 
-    res.send(`✅ WhatsApp очищен: <a href="${newLink}" target="_blank">${newLink}</a>`);
+    res.send(`✅ WhatsApp обновлён: <a href="${newLink}" target="_blank">${newLink}</a>`);
   } catch (err) {
     console.error("❌ Ошибка:", err?.response?.data || err.message);
-    res.status(500).send("❌ Ошибка при очистке поля WhatsApp");
+    res.status(500).send("❌ Ошибка при обновлении поля WhatsApp");
   }
 });
 
-// Пинг
 app.get("/ping", (req, res) => {
   res.send("pong");
 });
 
-// Запуск сервера
 app.listen(PORT, () => {
   console.log(`🚀 Сервер запущен на порту ${PORT}`);
 });
