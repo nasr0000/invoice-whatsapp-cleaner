@@ -19,7 +19,12 @@ app.get("/clean-wa-field", async (req, res) => {
     const invoice = invoiceRes.data?.result?.item;
     if (!invoice) return res.status(404).send("❌ Смарт-счёт не найден");
 
-    const currentValue = invoice[WHATSAPP_FIELD];
+    // Находим ключ без учёта регистра
+const key = Object.keys(invoice).find(k =>
+  k.toLowerCase() === WHATSAPP_FIELD.toLowerCase()
+);
+const currentValue = invoice[key];
+
     if (!currentValue) return res.send("❗ Поле WhatsApp пустое");
 
     const phoneMatch = currentValue.match(/(\d[\d\s+().-]+)/);
