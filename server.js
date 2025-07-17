@@ -33,18 +33,19 @@ app.get("/clean-invoice", async (req, res) => {
     }
 
     // 2. Если нет — получаем из контакта
-    if (!rawPhone && invoice.contacts && invoice.contacts.length > 0) {
-      const contactId = invoice.contacts[0].id;
-      const contactRes = await axios.post(`${WEBHOOK}crm.contact.get`, {
-        id: contactId
-      });
-      const contact = contactRes.data?.result;
-      const phoneObj = contact?.PHONE?.find(p => typeof p.VALUE === "string");
-      if (phoneObj) {
-        rawPhone = phoneObj.VALUE;
-        console.log("📌 Телефон из контакта:", rawPhone);
-      }
-    }
+if (!rawPhone && invoice.contactIds && invoice.contactIds.length > 0) {
+  const contactId = invoice.contactIds[0];
+  const contactRes = await axios.post(`${WEBHOOK}crm.contact.get`, {
+    id: contactId,
+  });
+  const contact = contactRes.data?.result;
+  const phoneObj = contact?.PHONE?.find(p => typeof p.VALUE === "string");
+  if (phoneObj) {
+    rawPhone = phoneObj.VALUE;
+    console.log("📌 Телефон из контакта:", rawPhone);
+  }
+}
+
 
     if (!rawPhone) {
       return res.send("❗ Телефон не найден ни в TITLE, ни в Контакте");
