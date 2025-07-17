@@ -19,21 +19,21 @@ app.get("/clean-wa-field", async (req, res) => {
     const invoice = invoiceRes.data?.result?.item;
     if (!invoice) return res.status(404).send("❌ Смарт-счёт не найден");
 
-    // Находим ключ без учёта регистра
-const key = Object.keys(invoice).find(k =>
-  k.toLowerCase() === WHATSAPP_FIELD.toLowerCase()
-);
-const currentValue = invoice[key];
-
+    // Находим ключ WhatsApp без учёта регистра
+    const key = Object.keys(invoice).find(k =>
+      k.toLowerCase() === WHATSAPP_FIELD.toLowerCase()
+    );
+    const currentValue = invoice[key];
     if (!currentValue) return res.send("❗ Поле WhatsApp пустое");
 
+    // Извлекаем номер из ссылки
     const phoneMatch = currentValue.match(/(\d[\d\s+().-]+)/);
     if (!phoneMatch) return res.send("❗ В поле WhatsApp не найден номер");
 
     const cleanedPhone = phoneMatch[0].replace(/\D/g, "");
     const newLink = `https://wa.me/${cleanedPhone}`;
 
-    // 1. Очистка (для надёжности)
+    // Шаг 1: Очистка поля (на всякий случай)
     await axios.post(`${WEBHOOK}crm.item.update`, {
       entityTypeId: 31,
       id: invoiceId,
@@ -42,7 +42,7 @@ const currentValue = invoice[key];
       }
     });
 
-    // 2. Установка очищенного значения
+    // Шаг 2: Установка очищенного значения
     await axios.post(`${WEBHOOK}crm.item.update`, {
       entityTypeId: 31,
       id: invoiceId,
@@ -58,10 +58,12 @@ const currentValue = invoice[key];
   }
 });
 
+// Пинг
 app.get("/ping", (req, res) => {
   res.send("pong");
 });
 
+// Запуск сервера
 app.listen(PORT, () => {
   console.log(`🚀 Сервер запущен на порту ${PORT}`);
 });
