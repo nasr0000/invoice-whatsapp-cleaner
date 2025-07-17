@@ -17,6 +17,10 @@ app.get("/clean-invoice", async (req, res) => {
       id: invoiceId
     });
     const invoice = invoiceRes.data?.result?.item;
+
+    console.log("📦 Ответ Bitrix24 crm.item.get:", JSON.stringify(invoiceRes.data, null, 2));
+    console.log("🧾 Содержимое invoice:", invoice);
+
     if (!invoice) return res.status(404).send("❌ Смарт-счёт не найден");
 
     let rawPhone = null;
